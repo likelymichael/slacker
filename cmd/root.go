@@ -11,12 +11,12 @@ import (
 var api *slack.Client
 
 var rootCmdLong = `
-       .__                 __                 
-  _____|  | _____    ____ |  | __ ___________ 
- /  ___/  | \__  \ _/ ___\|  |/ // __ \_  __ \
- \___ \|  |__/ __ \\  \___|    <\  ___/|  | \/
-/____  >____(____  /\___  >__|_ \\___  >__|   
-     \/          \/     \/     \/    \/       
+       .__                 __  
+  _____|  | _____    ____ |  | __ ______ 
+ /  ___/  | \__  \ _/ ___\|  |/ /\_  __ \
+ \___ \|  |__/ __ \\  \___|    <  |  | \/
+/____  >____(____  /\___  >__|_ \ |_ |   
+     \/          \/     \/     \/   \/
 	`
 
 var rootCmd = &cobra.Command{
@@ -44,7 +44,13 @@ func SlackAPI() *slack.Client {
 
 // Execute executes the root command.
 func Execute() {
+	rootCmd.AddCommand(NewCmdBrb())
+	rootCmd.AddCommand(NewCmdOoo())
+	rootCmd.AddCommand(NewCmdDnd())
+	rootCmd.AddCommand(NewCmdClear())
 	rootCmd.AddCommand(NewCmdStatus())
+	rootCmd.AddCommand(NewCmdEmoji())
+
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

@@ -1,53 +1,47 @@
 package cmd
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 )
 
-func BrbStatus() *cobra.Command {
-	var emoji string
-	var length int
-	var msg string
-
-	brbCmd := &cobra.Command{
-		Use:   "brb",
-		Short: "Set status to 'brb'",
-		Args:  cobra.RangeArgs(0, 2),
-		RunE:  runBrbCmd,
+func NewCmdBrb() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "brb <minutes> [message] [emoji]",
+		Short: "Set a BRB status with duration, optional message, and optional emoji",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  runBrb,
 	}
-
-	brbCmd.Flags().StringVarP(&emoji, "emoji", "e", ":speech_balloon:", "(Optional) Emoji to display. Default: :speech_balloon:")
-	brbCmd.Flags().IntVarP(&length, "length", "l", 1, "Length of status in 1 hour increments. Default: 1")
-	brbCmd.Flags().StringVarP(&msg, "message", "m", "brb", "(Optional) Custom message to display. Default: brb")
-
-	return brbCmd
+	return cmd
 }
 
-func runBrbCmd(cmd *cobra.Command, args []string) error {
-	length, lenErr := cmd.Flags().GetInt("length")
-	if lenErr != nil {
-		return lenErr
+func runBrb(cmd *cobra.Command, args []string) error {
+	minutes, err := strconv.Atoi(args[0])
+	if err != nil || minutes <= 0 {
+		return fmt.Errorf("invalid minutes value: %s", args[0])
 	}
 
-	emoji, emojiErr := cmd.Flags().GetString("emoji")
-	if emojiErr != nil {
-		return emojiErr
+	message := "BRB"
+	emoji := ":speech_balloon:"
+
+	if len(args) > 1 {
+		lastArg := args[len(args)-1]
+		if strings.HasPrefix(lastArg, ":") && strings.HasSuffix(lastArg, ":") {
+			emoji = lastArg
+			if len(args) > 2 {
+				message = strings.Join(args[1:len(args)-1], " ")
+			}
+		} else {
+			message = strings.Join(args[1:], " ")
+		}
 	}
 
-	msg, msgErr := cmd.Flags().GetString("message")
-	if msgErr != nil {
-		return msgErr
-	}
-
-	var expiration int64
-	if length > 0 {
-		expiration = time.Now().Add(time.Duration(length) * time.Hour).Unix()
-	} else {
-		expiration = 0
-	}
+	expiration := time.Now().Add(time.Duration(minutes) * time.Minute).Unix()
 
 	api := SlackAPI()
-	return api.SetUserCustomStatus(msg, emoji, expiration)
+	return api.SetUserCustomStatus(message, emoji, expiration)
 }

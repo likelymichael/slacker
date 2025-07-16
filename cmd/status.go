@@ -11,27 +11,14 @@ import (
 func NewCmdStatus() *cobra.Command {
 	statusCmd := &cobra.Command{
 		Use:   "status",
-		Short: "Slack status mgmt",
+		Short: "Show the current Slack status",
+		Args:  cobra.NoArgs,
+		RunE:  runStatus,
 	}
-
-	statusGetCmd := &cobra.Command{
-		Use:   "get",
-		Short: "View your current Slack status",
-		RunE:  runGetStatus,
-	}
-
-	statusClearCmd := &cobra.Command{
-		Use:   "clear",
-		Short: "Clear your Slack status and set yourself as active",
-		RunE:  runClearStatus,
-	}
-
-	statusCmd.AddCommand(statusGetCmd)
-	statusCmd.AddCommand(statusClearCmd)
 	return statusCmd
 }
 
-func runGetStatus(cmd *cobra.Command, args []string) error {
+func runStatus(cmd *cobra.Command, args []string) error {
 	api := SlackAPI()
 
 	auth, authErr := api.AuthTest()
@@ -54,16 +41,5 @@ func runGetStatus(cmd *cobra.Command, args []string) error {
 		fmt.Println("Expires: never")
 	}
 
-	return nil
-}
-
-func runClearStatus(cmd *cobra.Command, args []string) error {
-	api := SlackAPI()
-
-	if err := api.UnsetUserCustomStatus(); err != nil {
-		return fmt.Errorf("failed to clear status: %w", err)
-	}
-
-	fmt.Println("✅ Status cleared and presence set to active")
 	return nil
 }
